@@ -1,0 +1,8 @@
+# 编译中间产物
+[Bb]in/
+[Oo]bj/
+dist/deploy/
+
+# 本地参考程序集：存在时优先用本地 dll（与线上服务器完全同版本）；
+# 不存在时 csproj 会自动回退到 NuGet 包 TShock 6.1.0，所以 clone 后直接能编译。
+libs/

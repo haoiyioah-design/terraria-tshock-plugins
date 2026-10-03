@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>PlayerProjectileRandomizer</AssemblyName>
+    <RootNamespace>PlayerProjectileRandomizer</RootNamespace>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Player Projectile Randomizer for TShock</Product>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <DebugType>none</DebugType>
+    <NoWarn>$(NoWarn);CS0168;CS0219;CS0162</NoWarn>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)..\..\dist\</BaseOutputPath>
+    <TShockLibDir Condition="'$(TShockLibDir)' == ''">$(MSBuildThisFileDirectory)..\..\libs\</TShockLibDir>
+  </PropertyGroup>
+
+  <!-- 有 libs/ 时用本地引用（与线上服务器完全同版本）；没有则回退 NuGet，保证 clone 后直接能编译 -->
+  <ItemGroup Condition="Exists('$(TShockLibDir)TShockAPI.dll')">
+    <Reference Include="TShockAPI">
+      <HintPath>$(TShockLibDir)TShockAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="OTAPI">
+      <HintPath>$(TShockLibDir)OTAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="TerrariaServer">
+      <HintPath>$(TShockLibDir)TerrariaServer.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="!Exists('$(TShockLibDir)TShockAPI.dll')">
+    <PackageReference Include="TShock" Version="6.1.0" />
+  </ItemGroup>
+
+  <Target Name="ReportOutput" AfterTargets="Build">
+    <Message Importance="high" Text="插件已生成: $(TargetPath)" />
+  </Target>
+
+</Project>
