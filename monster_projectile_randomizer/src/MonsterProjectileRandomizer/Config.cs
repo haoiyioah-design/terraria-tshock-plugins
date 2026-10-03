@@ -10,8 +10,8 @@ namespace MonsterProjectileRandomizer
     ///
     /// 伤害规则（默认）：
     ///   · 换种类后，伤害仍然保持「原版那条弹幕的伤害」—— 陷阱打 100，射出来的东西就是 100。
-    ///   · 例外：巨石类（aiStyle==25 的滚动巨石）以及 OwnDamageProjectiles 名单里的弹幕，
-    ///     使用它们自身的伤害，不被覆盖。
+    ///   · 例外：巨石类（aiStyle==25 的滚动巨石，基础伤害见 BoulderDamage）以及
+    ///     OwnDamageProjectiles 名单里的弹幕，使用它们自身的伤害，不被覆盖。
     ///   · 若同时开启 RandomizeProjectileDamage，则在这个基准上再乘一个随机倍率。
     /// </summary>
     public sealed class ProjectileSettings
@@ -51,6 +51,19 @@ namespace MonsterProjectileRandomizer
 
         /// <summary>是否允许随机到巨石类弹幕（aiStyle==25 的滚动巨石，体积大、会滚动碾压）。</summary>
         public bool AllowBoulderProjectiles { get; set; } = true;
+
+        /// <summary>
+        /// 巨石类弹幕（aiStyle==25）换型后使用的基础伤害。
+        ///
+        /// 为什么需要这个值：1.4.5.8 里滚动巨石的 SetDefaults **根本不设置 damage**（模板值是 0），
+        /// 原版巨石的伤害是生成时按难度传进去的 —— 官方 Wiki 的 Boulder 页面写着对玩家
+        /// 140 / 280 / 420 分别对应经典 / 专家 / 大师（基础值 140，对 NPC 是 70）。
+        /// 所以随机化换型后如果不补这个值，巨石就会是 0 伤害、打不动人。
+        ///
+        /// 默认 140（经典难度的基础值，游戏会按当前难度自动乘倍率）。
+        /// 设为 0 = 不特殊处理巨石，改为继承「原版那条弹幕的伤害」。
+        /// </summary>
+        public int BoulderDamage { get; set; } = 140;
 
         /// <summary>
         /// 按「弹幕显示名关键词」拉黑（中英文各匹配一遍）：这些弹幕**不会被随机选出来**。
@@ -100,6 +113,14 @@ namespace MonsterProjectileRandomizer
             if (HeartbeatIntervalMs < 10)
             {
                 HeartbeatIntervalMs = 10;
+            }
+            if (BoulderDamage < 0)
+            {
+                BoulderDamage = 0;
+            }
+            if (BoulderDamage > 1000000)
+            {
+                BoulderDamage = 1000000;
             }
             ProjectileTypePool = DedupeInts(ProjectileTypePool);
             OwnDamageProjectiles = DedupeInts(OwnDamageProjectiles);
@@ -152,7 +173,9 @@ namespace MonsterProjectileRandomizer
             }
             if (KeepOriginalDamage)
             {
-                return "严格保持原版伤害（巨石类例外）";
+                return BoulderDamage > 0
+                    ? string.Format("严格保持原版伤害（巨石类固定 {0}）", BoulderDamage)
+                    : "严格保持原版伤害（巨石类也继承原伤害）";
             }
             return "使用新弹幕自身的伤害";
         }
