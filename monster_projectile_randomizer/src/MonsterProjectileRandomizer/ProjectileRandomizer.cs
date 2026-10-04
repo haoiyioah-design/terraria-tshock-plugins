@@ -320,16 +320,18 @@ namespace MonsterProjectileRandomizer
             }
 
             // 伤害结算：默认写回「原版那条弹幕的伤害」（陷阱打 100，射出来的东西就是 100）。
-            // 例外：巨石类（aiStyle==25 的滚动巨石）与 OwnDamageProjectiles 名单，用它们自身的伤害。
+            // 例外：OwnDamageProjectiles 名单里的弹幕，用它们自身的伤害。
+            //
+            // ⚠️ 巨石类（aiStyle==25）不能走「自身伤害」：1.4.5.8 里滚动巨石的 SetDefaults
+            // 根本不设 damage（模板值是 0），换型后取到的就是 0，巨石会变成 0 伤害。
+            // 所以巨石单独处理：
+            //   · BoulderDamage > 0 → 用这个固定基础值（原版巨石是 140/280/420 = 经典/专家/大师）
+            //   · BoulderDamage = 0 → 与其它弹幕一致，继承「原版那条弹幕的伤害」（不会放大低伤害弹幕）
             bool isBoulder = IsBoulderProjectile(projectile);
-            bool useOwnDamage = isBoulder
-                                || (settings.OwnDamageProjectiles != null && settings.OwnDamageProjectiles.Contains(newType));
+            bool useOwnDamage = settings.OwnDamageProjectiles != null && settings.OwnDamageProjectiles.Contains(newType);
             int newDamage;
             if (isBoulder && settings.BoulderDamage > 0)
             {
-                // 1.4.5.8 里滚动巨石的 SetDefaults 不设 damage（模板值是 0），原版的巨石伤害是
-                // 生成时按难度传进去的（官方 Wiki：140/280/420 = 经典/专家/大师）。
-                // 换型后不补这个基础值，巨石就是 0 伤害、打不动人。
                 newDamage = settings.BoulderDamage;
             }
             else if (useOwnDamage)
